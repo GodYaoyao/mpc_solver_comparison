@@ -2,7 +2,7 @@
 // Created by yao on 19-12-6.
 //
 
-#include"ros/ros.h"
+#include "ros/ros.h"
 #include "acado_toolkit.hpp"
 USING_NAMESPACE_ACADO
 
@@ -46,13 +46,13 @@ int main(int argc, char **argv) {
     DMatrix Q(6, 6);
     Q(0, 0) = 1.0;
     Q(1, 1) = 1.0;
-    Q(2, 2) = 10.0;
+    Q(2, 2) = 1.0;
     Q(3, 3) = 1.0;
-    Q(4, 4) = 10.0;
-    Q(5, 5) = 10.0;
+    Q(4, 4) = 1.0;
+    Q(5, 5) = 1.0;
 
     double N = 12;
-    double dt = 0.15;
+    double dt = 0.1;
 
     while (ros::ok()) {
         clock_t t_start = clock();
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
         ocp.subjectTo(-2 <= w_dot <= 2);
         ocp.subjectTo(AT_START, x == 0.);
         ocp.subjectTo(AT_START, y == 0.);
-        ocp.subjectTo(AT_START, v == 6.);
+        ocp.subjectTo(AT_START, v == 1.);
         ocp.subjectTo(AT_START, phi == -M_PI/6);
         ocp.subjectTo(AT_START, w == 0.);
 
@@ -99,8 +99,9 @@ int main(int argc, char **argv) {
 
         algorithm.getDifferentialStates(states);
         algorithm.getControls(controls);
+
         print("control_list", controls, N);
-        std::cout << "\b\b]" << std::endl;
+
         time.emplace_back(int(1000 * (clock() - t_start) / CLOCKS_PER_SEC) + 1);
         ROS_INFO_STREAM("cost time: " << time.back());
         loop_rate.sleep();
