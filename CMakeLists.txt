@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mpc_acado)
+project(solver_comparison)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -28,11 +28,14 @@ include_directories(
 )
 INCLUDE_DIRECTORIES(. ${ACADO_INCLUDE_DIRS})
 
-add_executable(mpc_acado_node src/acado.cpp)
-target_link_libraries(mpc_acado_node ${catkin_LIBRARIES} ${ACADO_SHARED_LIBRARIES} ${LINKER_LIBS})
+add_executable(acado_node src/acado.cpp)
+target_link_libraries(acado_node ${catkin_LIBRARIES} ${ACADO_SHARED_LIBRARIES} ${LINKER_LIBS})
 
-add_executable(mpc_snopt_node src/snopt.cpp)
-target_link_libraries(mpc_snopt_node ${catkin_LIBRARIES} ${SNOPT_LIBRARIES} ${LINKER_LIBS})
+add_executable(ipopt_node src/ipopt.cpp)
+target_link_libraries(ipopt_node ${catkin_LIBRARIES} ${IPOPT_LIBRARIES} ${LINKER_LIBS})
 
-add_executable(mpc_ipopt_node src/ipopt.cpp)
-target_link_libraries(mpc_ipopt_node ${catkin_LIBRARIES} ${IPOPT_LIBRARIES} ${LINKER_LIBS})
+add_executable(snopt_node src/snopt.cpp)
+target_link_libraries(snopt_node ${catkin_LIBRARIES} ${SNOPT_LIBRARIES} ${LINKER_LIBS})
+
+add_executable(example_node src/snopt_example.cpp)
+target_link_libraries(example_node ${catkin_LIBRARIES} ${SNOPT_LIBRARIES} ${LINKER_LIBS})
