@@ -21,14 +21,14 @@ void fgFunction(int *Status, int *n, double x[],
 
     F[0] = 0.;
     for (int i = 0; i < step_N; ++i) {
-        F[0] += pow(x[x_begin + i] - refer->at(i)[0], 2);
-        F[0] += pow(x[y_begin + i] - refer->at(i)[1], 2);
-        F[0] += pow(x[phi_begin + i] - refer->at(i)[2], 2);
-        F[0] += pow(x[v_begin + i] - refer->at(i)[3], 2);
+        F[0] += weight_x * pow(x[x_begin + i] - refer->at(i)[0], 2);
+        F[0] += weight_y * pow(x[y_begin + i] - refer->at(i)[1], 2);
+        F[0] += weight_phi * pow(x[phi_begin + i] - refer->at(i)[2], 2);
+        F[0] += weight_v * pow(x[v_begin + i] - refer->at(i)[3], 2);
     }
     for (int i = 0; i < step_N - 1; ++i) {
-        F[0] += pow(x[a_begin + i], 2);
-        F[0] += pow(x[wd_begin + i], 2);
+        F[0] += weight_a * pow(x[a_begin + i], 2);
+        F[0] += weight_wd * pow(x[wd_begin + i], 2);
     }
 
     F[1 + x_begin] = x[x_begin];
@@ -67,57 +67,17 @@ int main(int argc, char **argv) {
     std::vector<int> time;
     int no_one = 0;
 
-//    std::vector<std::vector<double>> A1(N, std::vector<double>(N, 0));
-//    for (int i = 0; i < N; ++i) {
-//        A1[i][i] = 1;
-//    }
-//    for (int i = 0; i < N - 1; ++i) {
-//        A1[i + 1][i] = -1;
-//    }
-//
-//    std::vector<std::vector<double>> A2(N - 1, std::vector<double>(N - 1, 0));
-//    for (int i = 0; i < N - 1; ++i) {
-//        A2[i][i] = -dt;
-//    }
-//
-//    for (int i = 0; i < A2.size(); ++i) {
-//        for (int j = 0; j < A2[0].size(); ++j) {
-//            std::cout << A2[i][j] << "  ";
-//        }
-//        std::cout << std::endl;
-//    }
+    double *x = new double[n_vars]{0};
+    double *xlow = new double[n_vars]{0};
+    double *xupp = new double[n_vars]{0};
+    double *xmul = new double[n_vars]{0};
+    int *xstate = new int[n_vars]{0};
 
-//    int lenA = state + 2 * (N - 1) + 2 * (N - 1) + 4 * (N - 1) + 3 * (N - 1) + 3 * (N - 1);
-//    int *iAfun = new int[lenA]{0};
-//    int *jAvar = new int[lenA]{0};
-//    double *A = new double[lenA]{0};
-//    int neA = lenA;
-//
-//    for (int i = 0; i < state; ++i) {
-//        iAfun[i] = i*N+1;
-//        jAvar[i] = i*N;
-//        A[i] = 1;
-//    }
-//
-//    for (int k = 0; k < state * (N-1); ++k) {
-//        iAfun[state + 2 * k + 1] = k + 2;
-//        jAvar[state + 2 * k + 1] = k;
-//        A[state + 2 * k + 1] = -1;
-//
-//        iAfun[state + 2 * k] = k + 2;
-//        jAvar[state + 2 * k] = k + 1;
-//        A[state + 2 * k] = 1;
-//    }
-//
-//    for (int k = 0; k < 3*N; ++k) {
-//        iAfun[2*state * N - 1+k] = 25 + k;
-//        jAvar[2*state * N - 1+k] = 47 + k;
-//        A[2*state * N - 1+k] = -dt;
-//    }
-//
-//    for (int l = 0; l < lenA; ++l) {
-//        std::cout <<l<<" : " << "(" << *(iAfun + l) << ", " << *(jAvar + l) << ") : " << *(A + l) << std::endl;
-//    }
+    double *F = new double[n_constrains]{0};
+    double *Flow = new double[n_constrains]{0};
+    double *Fupp = new double[n_constrains]{0};
+    double *Fmul = new double[n_constrains]{0};
+    int *Fstate = new int[n_constrains]{0};
 
     for (int K = 0; K < 100; ++K) {
 
@@ -143,12 +103,6 @@ int main(int argc, char **argv) {
         // Allocate and initialize;
         int nS = 0, nInf;
         double sInf;
-
-        double *x = new double[n_vars];
-        double *xlow = new double[n_vars];
-        double *xupp = new double[n_vars];
-        double *xmul = new double[n_vars];
-        int *xstate = new int[n_vars];
 
         // Set the upper and lower bounds.
         for (int i = 0; i < v_begin; ++i) {
@@ -178,12 +132,6 @@ int main(int argc, char **argv) {
         x[w_begin] = w_init;
         x[a_begin] = 0.;
         x[wd_begin] = 0.;
-
-        double *F = new double[n_constrains];
-        double *Flow = new double[n_constrains];
-        double *Fupp = new double[n_constrains];
-        double *Fmul = new double[n_constrains];
-        int *Fstate = new int[n_constrains];
 
         for (int j = 0; j < n_constrains; ++j) {
             Flow[j] = 0.;
@@ -239,23 +187,23 @@ int main(int argc, char **argv) {
             printSolutionResult(x, "control_list", a_begin, wd_begin, step_N - 1);
         }
 
-        delete refer;
-        refer = nullptr;
-
-        delete[]x;
-        delete[]xlow;
-        delete[]xupp;
-        delete[]xmul;
-        delete[]xstate;
-
-        delete[]F;
-        delete[]Flow;
-        delete[]Fupp;
-        delete[]Fmul;
-        delete[]Fstate;
-
         time.emplace_back(int(1000 * (clock() - t_start) / CLOCKS_PER_SEC) + 1);
     }
+
+    delete refer;
+
+    delete[]x;
+    delete[]xlow;
+    delete[]xupp;
+    delete[]xmul;
+    delete[]xstate;
+
+    delete[]F;
+    delete[]Flow;
+    delete[]Fupp;
+    delete[]Fmul;
+    delete[]Fstate;
+
     std::cout << "fail: " << no_one << std::endl;
     printTime(time);
     return 0;
