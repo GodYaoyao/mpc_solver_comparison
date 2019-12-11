@@ -199,20 +199,17 @@ void toyusrfg_(int *Status, int *n, double x[],
     if (*needF > 0) {
         F[0] = pow(x[1] - 1, 2); //  Objective row
         F[1] = x[0] * x[0] + 4 * x[1] * x[1];
-        F[2] = (x[0] - 2) * (x[0] - 2) + x[0] * x[1];
+//        F[2] = (x[0] - 2) * (x[0] - 2) + x[0] * x[1];
+        F[2] = - 2 * x[0] + x[1];
     }
 
     if (*needG > 0) {
 
-        G[0] = 2 * (x[1] - 1);
-
-        G[1] = 2 * x[0];
-
+        G[0] = 2 * x[0];
+//        G[1] = 2 * (x[0] - 2) + x[1];
+        G[1] = 2 * (x[1] - 1);
         G[2] = 8 * x[1];
-
-        G[3] = 2 * (x[0] - 2) + x[1];
-
-        G[4] = x[0];
+//        G[4] = x[0];
     }
 }
 
@@ -292,17 +289,6 @@ int main(int argc, char **argv) {
 
     // Reset the variables and solve ...
 
-    int lenA = 6;
-    int *iAfun = new int[lenA];
-    int *jAvar = new int[lenA];
-    double *A = new double[lenA];
-
-    int lenG = 6;
-    int *iGfun = new int[lenG];
-    int *jGvar = new int[lenG];
-
-    int neA, neG; // neA and neG must be defined when providing dervatives
-
     xstate[0] = 0;
     xstate[1] = 0;
     Fmul[0] = 0;
@@ -311,29 +297,55 @@ int main(int argc, char **argv) {
     x[0] = 1.0;
     x[1] = 1.0;
 
+    int lenA = 6;
+    int *iAfun = new int[lenA]{0};
+    int *jAvar = new int[lenA]{0};
+    double *A = new double[lenA]{0};
 
-    // Provide the elements of the Jacobian explicitly.
-    iGfun[0] = 0;
-    jGvar[0] = 1;
+    int lenG = 6;
+    int *iGfun = new int[lenG]{0};
+    int *jGvar = new int[lenG]{0};
 
-    iGfun[1] = 1;
-    jGvar[1] = 0;
+    int neA, neG; // neA and neG must be defined when providing dervatives
 
-    iGfun[2] = 1;
-    jGvar[2] = 1;
+    ToyProb.computeJac(neF, n, toyusrfg_,
+                       x, xlow, xupp,
+                       iAfun, jAvar, A, neA,
+                       iGfun, jGvar, neG);
 
-    iGfun[3] = 2;
-    jGvar[3] = 0;
+    for (int j = 0; j < lenA; ++j) {
+        std::cout<<"("<<--*(iAfun+j)<<", "<<--*(jAvar+j)<<") : "<<*(A+j)<<std::endl;
+    }
+    std::cout<<neA<<std::endl;
 
-    iGfun[4] = 2;
-    jGvar[4] = 1;
+    for (int j = 0; j < lenG; ++j) {
+        std::cout<<"("<<--*(iGfun+j)<<", "<<--*(jGvar+j)<<")"<<std::endl;
+    }
+    std::cout<<neG<<std::endl;
 
-    neG = 5;
-
+//    // Provide the elements of the Jacobian explicitly.
+//    iGfun[0] = 0;
+//    jGvar[0] = 1;
+//
+//    iGfun[1] = 1;
+//    jGvar[1] = 0;
+//
+//    iGfun[2] = 1;
+//    jGvar[2] = 1;
+//
+//    iGfun[3] = 2;
+//    jGvar[3] = 0;
+//
+//    iGfun[4] = 2;
+//    jGvar[4] = 1;
+//
+//    neG = 5;
+//
 //    iAfun[0] = 0;
 //    jAvar[0] = 0;
 //    A[0] = 1.0;
-    neA = 0;
+//
+//    neA = 0;
 
     ToyProb.initialize("", 0);
 //    ToyProb.setProbName    ( "Toy1" );         // Give the problem a new name for Snopt.
