@@ -74,6 +74,8 @@ int main(int argc, char **argv) {
     std::vector<int> time;
     int fail = 0;
 
+    std::vector<std::vector<double>> *refer = nullptr;
+
     ros::init(argc, argv, "ipopt_node");
     ros::NodeHandle nh;
     ros::Rate loop_rate(10);
@@ -81,23 +83,10 @@ int main(int argc, char **argv) {
     while (ros::ok()) {
         clock_t t_start = clock();
         srand(time.size());
-        double x_init = 0.;
-        double y_init = 0.;
-        double phi_init = -M_PI / 6 + (double(rand()) / RAND_MAX - 0.5) / 10;
-        double v_init = 1.;
-        double w_init = 0.;
 
-        std::vector<std::vector<double>> *refer = new std::vector<std::vector<double>>(step_N, std::vector<double>(4));
-        refer->at(0)[0] = 0.;
-        refer->at(0)[1] = 1.;
-        refer->at(0)[2] = -M_PI / 6;
-        refer->at(0)[3] = 5.;
-        for (int i = 1; i < step_N; ++i) {
-            refer->at(i)[0] = refer->at(i - 1)[0] + refer->at(i - 1)[3] * cos(refer->at(i - 1)[2]) * dt;
-            refer->at(i)[1] = refer->at(i - 1)[1] + refer->at(i - 1)[3] * sin(refer->at(i - 1)[2]) * dt;
-            refer->at(i)[2] = refer->at(i - 1)[2] + (double(rand()) / RAND_MAX - 0.5) / 10;
-            refer->at(i)[3] = refer->at(i - 1)[3] + double(rand()) / RAND_MAX - 0.5;
-        }
+        double x_init, y_init, phi_init, v_init, w_init;
+        generateInitState(x_init, y_init, phi_init, v_init, w_init, random_state);
+        generateReferPoint(refer, random_state);
 
         bool ok = true;
         typedef CPPAD_TESTVECTOR(double) Dvector;
@@ -194,11 +183,13 @@ int main(int argc, char **argv) {
             printSolutionResult(solution.x, "control_list", a_begin, wd_begin, step_N - 1);
         }
 
-        delete refer;
         time.emplace_back(int(1000 * (clock() - t_start) / CLOCKS_PER_SEC) + 1);
         ROS_INFO_STREAM("cost time: " << time.back());
         loop_rate.sleep();
     }
+
+    delete refer;
+
     std::cout << "fail: " << fail << std::endl;
     printTime(time);
     return 0;

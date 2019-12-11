@@ -21,6 +21,8 @@ int main(int argc, char **argv) {
     std::vector<int> time;
     int fail = 0;
 
+    std::vector<std::vector<double>> *refer = nullptr;
+
     ros::init(argc, argv, "acado_node");
     ros::NodeHandle nh;
     ros::Rate loop_rate(10);
@@ -56,27 +58,17 @@ int main(int argc, char **argv) {
 
     while (ros::ok()) {
         clock_t t_start = clock();
-        double x_init = 0.;
-        double y_init = 0.;
-        double phi_init = -M_PI / 6 + (double(rand()) / RAND_MAX - 0.5) / 10;
-        double v_init = 1.;
-        double w_init = 0.;
 
-        // Reference
+        double x_init, y_init, phi_init, v_init, w_init;
+        generateInitState(x_init, y_init, phi_init, v_init, w_init, random_state);
+        generateReferPoint(refer, random_state);
+
         Grid time_grid(0., (step_N - 1) * dt, step_N);
         VariablesGrid reference(6, time_grid);
 
-        reference(0, 0) = 0.;
-        reference(0, 1) = 1.;
-        reference(0, 2) = -M_PI / 6;
-        reference(0, 3) = 5.;
-        reference(0, 4) = 0.;
-        reference(0, 5) = 0.;
-        for (int i = 1; i < step_N; ++i) {
-            reference(i, 0) = reference(i - 1, 0) + reference(i - 1, 3) * cos(reference(i - 1, 2)) * dt;
-            reference(i, 1) = reference(i - 1, 1) + reference(i - 1, 3) * sin(reference(i - 1, 2)) * dt;
-            reference(i, 2) = reference(i - 1, 2) + (double(rand()) / RAND_MAX - 0.5) / 10;
-            reference(i, 3) = reference(i - 1, 3) + double(rand()) / RAND_MAX - 0.5;
+        for (int i = 0; i < step_N; ++i) {
+            for (int j = 0; j < 4; ++j)
+                reference(i, j) = refer->at(i)[j];
             reference(i, 4) = 0.;
             reference(i, 5) = 0.;
         }
@@ -117,6 +109,9 @@ int main(int argc, char **argv) {
         ROS_INFO_STREAM("cost time: " << time.back());
         loop_rate.sleep();
     }
+
+    delete refer;
+
     std::cout << "fail: " << fail << std::endl;
     printTime(time);
     return 0;

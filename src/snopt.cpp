@@ -80,25 +80,11 @@ int main(int argc, char **argv) {
     int *Fstate = new int[n_constrains]{0};
 
     for (int K = 0; K < 100; ++K) {
-
         clock_t t_start = clock();
-        double x_init = 0.;
-        double y_init = 0.;
-        double phi_init = -M_PI / 6 + (double(rand()) / RAND_MAX - 0.5) / 10;
-        double v_init = 1.;
-        double w_init = 0.;
 
-        refer = new std::vector<std::vector<double>>(step_N, std::vector<double>(4));
-        refer->at(0)[0] = 0.;
-        refer->at(0)[1] = 1.;
-        refer->at(0)[2] = -M_PI / 6;
-        refer->at(0)[3] = 5.;
-        for (int i = 1; i < step_N; ++i) {
-            refer->at(i)[0] = refer->at(i - 1)[0] + refer->at(i - 1)[3] * cos(refer->at(i - 1)[2]) * dt;
-            refer->at(i)[1] = refer->at(i - 1)[1] + refer->at(i - 1)[3] * sin(refer->at(i - 1)[2]) * dt;
-            refer->at(i)[2] = refer->at(i - 1)[2] + (double(rand()) / RAND_MAX - 0.5) / 10;
-            refer->at(i)[3] = refer->at(i - 1)[3] + double(rand()) / RAND_MAX - 0.5;
-        }
+        double x_init, y_init, phi_init, v_init, w_init;
+        generateInitState(x_init, y_init, phi_init, v_init, w_init, random_state);
+        generateReferPoint(refer, random_state);
 
         // Allocate and initialize;
         int nS = 0, nInf;

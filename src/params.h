@@ -4,12 +4,13 @@
 
 #ifndef SOLVER_COMPARISON_PARAMS_H
 #define SOLVER_COMPARISON_PARAMS_H
+const bool random_state = false;
 const double g = 9.81;
 const int step_N = 12;
 const double dt = 0.1;
-const int weight_x = 1;
-const int weight_y = 1;
-const int weight_phi = 1;
+const int weight_x = 10;
+const int weight_y = 10;
+const int weight_phi = 10;
 const int weight_v = 1;
 const int weight_a = 1;
 const int weight_wd = 1;
@@ -29,6 +30,33 @@ const int w_begin = v_begin + step_N;
 // Control
 const int a_begin = w_begin + step_N;
 const int wd_begin = a_begin + step_N - 1;
+
+void generateInitState(double &x_init,
+                       double &y_init,
+                       double &phi_init,
+                       double &v_init,
+                       double &w_init,
+                       bool random = true) {
+    x_init = 0.;
+    y_init = 0.;
+    phi_init = -M_PI / 6 + (random ? (double(rand()) / RAND_MAX - 0.5) / 10 : 0.);
+    v_init = 1.;
+    w_init = 0.;
+}
+
+void generateReferPoint(std::vector<std::vector<double>> *&refer, bool random = true) {
+    refer = new std::vector<std::vector<double>>(step_N, std::vector<double>(4));
+    refer->at(0)[0] = 1.;
+    refer->at(0)[1] = 0.;
+    refer->at(0)[2] = -M_PI / 6;
+    refer->at(0)[3] = 5.;
+    for (int i = 1; i < step_N; ++i) {
+        refer->at(i)[0] = refer->at(i - 1)[0] + refer->at(i - 1)[3] * cos(refer->at(i - 1)[2]) * dt;
+        refer->at(i)[1] = refer->at(i - 1)[1] + refer->at(i - 1)[3] * sin(refer->at(i - 1)[2]) * dt;
+        refer->at(i)[2] = refer->at(i - 1)[2] + (random ? (double(rand()) / RAND_MAX - 0.5) / 10 : 0.);
+        refer->at(i)[3] = refer->at(i - 1)[3] + (random ? double(rand()) / RAND_MAX - 0.5 : 0.);
+    }
+}
 
 void printInitState(double x_init, double y_init, double phi_init, double v_init, double w_init) {
     std::cout << "x = " << x_init << std::endl;
