@@ -80,13 +80,12 @@ int main(int argc, char **argv) {
 
     while (ros::ok()) {
         clock_t t_start = clock();
+        srand(time.size());
         double x_init = 0.;
         double y_init = 0.;
         double phi_init = -M_PI / 6 + (double(rand()) / RAND_MAX - 0.5) / 10;
         double v_init = 1.;
         double w_init = 0.;
-
-        ROS_INFO_STREAM("phi_init" << phi_init);
 
         std::vector<std::vector<double>> *refer = new std::vector<std::vector<double>>(step_N, std::vector<double>(4));
         refer->at(0)[0] = 0.;

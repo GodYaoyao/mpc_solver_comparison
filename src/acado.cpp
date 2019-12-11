@@ -62,8 +62,6 @@ int main(int argc, char **argv) {
         double v_init = 1.;
         double w_init = 0.;
 
-        ROS_INFO_STREAM("phi_init" << phi_init);
-
         // Reference
         Grid time_grid(0., (step_N - 1) * dt, step_N);
         VariablesGrid reference(6, time_grid);
@@ -109,6 +107,7 @@ int main(int argc, char **argv) {
 
         if (result != 0) {
             fail++;
+            printInitState(x_init, y_init, phi_init, v_init, w_init);
             print("refer_point", reference, step_N);
             print("solver_point", states, step_N);
             print("control_list", controls, step_N);
