@@ -19,7 +19,9 @@ void print(std::string name, T vari, int N) {
 int main(int argc, char **argv) {
 
     std::vector<int> time;
-    ros::init(argc, argv, "topic_publisher");
+    int fail = 0;
+
+    ros::init(argc, argv, "acado_node");
     ros::NodeHandle nh;
     ros::Rate loop_rate(10);
 
@@ -52,12 +54,18 @@ int main(int argc, char **argv) {
     Q(4, 4) = weight_a;
     Q(5, 5) = weight_wd;
 
-    int N = step_N;
-
     while (ros::ok()) {
         clock_t t_start = clock();
+        double x_init = 0.;
+        double y_init = 0.;
+        double phi_init = -M_PI / 6 + (double(rand()) / RAND_MAX - 0.5) / 10;
+        double v_init = 1.;
+        double w_init = 0.;
+
+        ROS_INFO_STREAM("phi_init" << phi_init);
+
         // Reference
-        Grid time_grid(0., (N - 1) * dt, N);
+        Grid time_grid(0., (step_N - 1) * dt, step_N);
         VariablesGrid reference(6, time_grid);
 
         reference(0, 0) = 0.;
@@ -66,16 +74,14 @@ int main(int argc, char **argv) {
         reference(0, 3) = 5.;
         reference(0, 4) = 0.;
         reference(0, 5) = 0.;
-
-        for (int i = 1; i < N; ++i) {
+        for (int i = 1; i < step_N; ++i) {
             reference(i, 0) = reference(i - 1, 0) + reference(i - 1, 3) * cos(reference(i - 1, 2)) * dt;
             reference(i, 1) = reference(i - 1, 1) + reference(i - 1, 3) * sin(reference(i - 1, 2)) * dt;
-            reference(i, 2) = reference(i - 1, 2);// + (double(rand()) / RAND_MAX - 0.5) / 10;
-            reference(i, 3) = reference(i - 1, 3);// + double(rand()) / RAND_MAX - 0.5;
+            reference(i, 2) = reference(i - 1, 2) + (double(rand()) / RAND_MAX - 0.5) / 10;
+            reference(i, 3) = reference(i - 1, 3) + double(rand()) / RAND_MAX - 0.5;
             reference(i, 4) = 0.;
             reference(i, 5) = 0.;
         }
-        print("refer_point", reference, N);
 
         OCP ocp(reference.getTimePoints());
         ocp.minimizeLSQ(Q, h, reference);
@@ -95,22 +101,24 @@ int main(int argc, char **argv) {
         OptimizationAlgorithm algorithm(ocp);
         algorithm.set(PRINTLEVEL, NONE);
         algorithm.set(PRINT_COPYRIGHT, NONE);
-        algorithm.solve();
+        returnValueType result = algorithm.solve().getType();
 
         VariablesGrid states, controls;
-
         algorithm.getDifferentialStates(states);
         algorithm.getControls(controls);
 
-        print("solver_point", states, N);
-        print("control_list", controls, N);
+        if (result != 0) {
+            fail++;
+            print("refer_point", reference, step_N);
+            print("solver_point", states, step_N);
+            print("control_list", controls, step_N);
+        }
 
         time.emplace_back(int(1000 * (clock() - t_start) / CLOCKS_PER_SEC) + 1);
         ROS_INFO_STREAM("cost time: " << time.back());
         loop_rate.sleep();
     }
-    double mean_time = std::accumulate(time.begin(), time.end(), 0) / time.size();
-    std::cout << time.size() << std::endl;
-    std::cout << mean_time << std::endl;
+    std::cout << "fail: " << fail << std::endl;
+    printTime(time);
     return 0;
 }

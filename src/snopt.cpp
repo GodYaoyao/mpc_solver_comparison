@@ -8,25 +8,9 @@
 //#include "ros/ros.h"
 #include "snopt/snopt.h"
 #include "snopt/snoptProblem.hpp"
+#include "params.h"
 
 std::vector<std::vector<double>> *refer = nullptr;
-
-double dt = 0.1;
-int N = 12;
-int state = 5;
-int control = 2;
-
-int n_vars = state * N + control * (N - 1);
-int n_constrains = 1 + state * N;
-// State
-int x_begin = 0;
-int y_begin = x_begin + N;
-int phi_begin = y_begin + N;
-int v_begin = phi_begin + N;
-int w_begin = v_begin + N;
-// Control
-int a_begin = w_begin + N;
-int wd_begin = a_begin + N - 1;
 
 void fgFunction(int *Status, int *n, double x[],
                 int *needF, int *neF, double F[],
@@ -36,13 +20,13 @@ void fgFunction(int *Status, int *n, double x[],
                 double ru[], int *lenru) {
 
     F[0] = 0.;
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i < step_N; ++i) {
         F[0] += pow(x[x_begin + i] - refer->at(i)[0], 2);
         F[0] += pow(x[y_begin + i] - refer->at(i)[1], 2);
         F[0] += pow(x[phi_begin + i] - refer->at(i)[2], 2);
         F[0] += pow(x[v_begin + i] - refer->at(i)[3], 2);
     }
-    for (int i = 0; i < N - 1; ++i) {
+    for (int i = 0; i < step_N - 1; ++i) {
         F[0] += pow(x[a_begin + i], 2);
         F[0] += pow(x[wd_begin + i], 2);
     }
@@ -53,7 +37,7 @@ void fgFunction(int *Status, int *n, double x[],
     F[1 + v_begin] = x[v_begin];
     F[1 + w_begin] = x[w_begin];
 
-    for (int j = 0; j < N - 1; ++j) {
+    for (int j = 0; j < step_N - 1; ++j) {
 
         double x1 = x[x_begin + j + 1];
         double y1 = x[y_begin + j + 1];
@@ -140,21 +124,20 @@ int main(int argc, char **argv) {
         clock_t t_start = clock();
         double x_init = 0.;
         double y_init = 0.;
-        double phi_init = -M_PI / 6;// + (double(rand()) / RAND_MAX - 0.5) / 10;
+        double phi_init = -M_PI / 6 + (double(rand()) / RAND_MAX - 0.5) / 10;
         double v_init = 1.;
         double w_init = 0.;
 
-        refer = new std::vector<std::vector<double>>(N, std::vector<double>(4));
+        refer = new std::vector<std::vector<double>>(step_N, std::vector<double>(4));
         refer->at(0)[0] = 0.;
         refer->at(0)[1] = 1.;
         refer->at(0)[2] = -M_PI / 6;
         refer->at(0)[3] = 5.;
-
-        for (int i = 1; i < N; ++i) {
+        for (int i = 1; i < step_N; ++i) {
             refer->at(i)[0] = refer->at(i - 1)[0] + refer->at(i - 1)[3] * cos(refer->at(i - 1)[2]) * dt;
             refer->at(i)[1] = refer->at(i - 1)[1] + refer->at(i - 1)[3] * sin(refer->at(i - 1)[2]) * dt;
-            refer->at(i)[2] = refer->at(i - 1)[2];// + (double(rand()) / RAND_MAX - 0.5) / 10;
-            refer->at(i)[3] = refer->at(i - 1)[3];// + double(rand()) / RAND_MAX - 0.5;
+            refer->at(i)[2] = refer->at(i - 1)[2] + (double(rand()) / RAND_MAX - 0.5) / 10;
+            refer->at(i)[3] = refer->at(i - 1)[3] + double(rand()) / RAND_MAX - 0.5;
         }
 
         // Allocate and initialize;
@@ -246,33 +229,14 @@ int main(int argc, char **argv) {
                                      x, xstate, xmul,
                                      F, Fstate, Fmul,
                                      nS, nInf, sInf);
+
         if (solution != 1) {
-            no_one++;
-
             std::cout << "solution: " << solution << std::endl;
-            std::cout << "x = " << x_init << std::endl;
-            std::cout << "y = " << y_init << std::endl;
-            std::cout << "phi = " << phi_init << std::endl;
-            std::cout << "v = " << v_init << std::endl;
-            std::cout << "w = " << w_init << std::endl;
-
-            std::cout << "refer_point" << " = [";
-            for (int i = 0; i < N; ++i) {
-                std::cout << "(" << refer->at(i)[0] << ", " << refer->at(i)[1] << "), ";
-            }
-            std::cout << "\b\b]" << std::endl;
-
-            std::cout << "solver_point" << " = [";
-            for (int i = 0; i < N; ++i) {
-                std::cout << "(" << x[x_begin + i] << ", " << x[y_begin + i] << "), ";
-            }
-            std::cout << "\b\b]" << std::endl;
-
-            std::cout << "control_list" << " = [";
-            for (int i = 0; i < N - 1; ++i) {
-                std::cout << "(" << x[a_begin + i] << ", " << x[wd_begin + i] << "), ";
-            }
-            std::cout << "\b\b]" << std::endl;
+            no_one++;
+            printInitState(x_init, y_init, phi_init, v_init, w_init);
+            printReferPoint(refer);
+            printSolutionResult(x, "solver_point", x_begin, y_begin, step_N);
+            printSolutionResult(x, "control_list", a_begin, wd_begin, step_N - 1);
         }
 
         delete refer;
@@ -292,10 +256,7 @@ int main(int argc, char **argv) {
 
         time.emplace_back(int(1000 * (clock() - t_start) / CLOCKS_PER_SEC) + 1);
     }
-    std::cout << "no_one: " << no_one << std::endl;
-    double mean_time = std::accumulate(time.begin(), time.end(), 0) / time.size();
-    std::cout << time.size() << std::endl;
-    std::cout << mean_time << std::endl;
-
+    std::cout << "fail: " << no_one << std::endl;
+    printTime(time);
     return 0;
 }
