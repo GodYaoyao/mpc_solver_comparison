@@ -37,5 +37,5 @@ target_link_libraries(ipopt_node ${catkin_LIBRARIES} ${IPOPT_LIBRARIES} ${LINKER
 add_executable(snopt_node src/snopt.cpp)
 target_link_libraries(snopt_node ${catkin_LIBRARIES} ${SNOPT_LIBRARIES} ${LINKER_LIBS})
 
-add_executable(example_node src/snopt_example.cpp)
-target_link_libraries(example_node ${catkin_LIBRARIES} ${SNOPT_LIBRARIES} ${LINKER_LIBS})
+add_executable(ros_test_node src/ros_test.cpp)
+target_link_libraries(ros_test_node ${catkin_LIBRARIES} ${LINKER_LIBS})

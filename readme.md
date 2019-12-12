@@ -4,7 +4,7 @@ ROS 中的 `loop_rate.sleep() `函数对求解时间的影响很大。
 
 | 求解器                 | snopt | ipopt | acado |
 | ---------------------- | ----- | ----- |-----|
-| 无`loop_rate.sleep() ` | 2     | 12    | 28    |
-| 有`loop_rate.sleep() ` | 12    | 41    | 48    |
+| 无`loop_rate.sleep() ` | 3658/2ms     | 789/12ms    | 351/27ms    |
+| 有`loop_rate.sleep() ` | 108/11ms    | 109/38ms    | 107/45ms    |
 
 时间单位毫秒，只是大概，并不是完全一样的条件下测试。
