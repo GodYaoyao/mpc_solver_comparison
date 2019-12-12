@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
         }
 
         time.emplace_back(int(1000 * (clock() - t_start) / CLOCKS_PER_SEC) + 1);
-        ROS_INFO_STREAM("cost time: " << time.back());
+        std::cout << "cost time: " << time.back() << std::endl;
         loop_rate.sleep();
     }
 

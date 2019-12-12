@@ -4,7 +4,7 @@
 
 #ifndef SOLVER_COMPARISON_PARAMS_H
 #define SOLVER_COMPARISON_PARAMS_H
-const bool random_state = false;
+const bool random_state = true;
 const double g = 9.81;
 const int step_N = 12;
 const double dt = 0.1;
