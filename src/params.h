@@ -88,7 +88,7 @@ void printTime(const std::vector<T> &time) {
     if (time.empty())
         return;
     T a = 0.;
-    double mean_time = std::accumulate(time.begin(), time.end(), a) / time.size();
+    int mean_time = std::accumulate(time.begin(), time.end(), a) / time.size() + 1;
     std::cout << time.size() << std::endl;
     std::cout << mean_time << std::endl;
 }

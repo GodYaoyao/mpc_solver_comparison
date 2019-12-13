@@ -114,43 +114,43 @@ void fgFunction(int *Status, int *n, double x[],
     if (*needG > 0) {
         for (int i = 0; i < step_N; ++i) {
             G[i] = 2 * weight_x * (x[x_begin + i] - refer->at(i)[0]);
-            G[12 + i] = 2 * weight_y * (x[y_begin + i] - refer->at(i)[1]);
+            G[step_N + i] = 2 * weight_y * (x[y_begin + i] - refer->at(i)[1]);
         } // G[23], G.size() = 24
 
         for (int i = 0; i < step_N; ++i) {
-            G[24 + 3 * i] = 2 * weight_phi * (x[phi_begin + i] - refer->at(i)[2]);
+            G[2 * step_N + 3 * i] = 2 * weight_phi * (x[phi_begin + i] - refer->at(i)[2]);
         }
         for (int i = 0; i < step_N - 1; ++i) {
-            G[24 + 3 * i + 1] = (x[v_begin + i] * dt + x[a_begin + i] * dt * dt / 2) * sin(x[phi_begin + i]);
-            G[24 + 3 * i + 2] = -(x[v_begin + i] * dt + x[a_begin + i] * dt * dt / 2) * cos(x[phi_begin + i]);
+            G[2 * step_N + 3 * i + 1] = (x[v_begin + i] * dt + x[a_begin + i] * dt * dt / 2) * sin(x[phi_begin + i]);
+            G[2 * step_N + 3 * i + 2] = -(x[v_begin + i] * dt + x[a_begin + i] * dt * dt / 2) * cos(x[phi_begin + i]);
         } // G[57], G.size() = 58
 
         for (int i = 0; i < step_N; ++i) {
-            G[58 + 3 * i] = 2 * weight_v * (x[v_begin + i] - refer->at(i)[3]);
+            G[5 * step_N - 2 + 3 * i] = 2 * weight_v * (x[v_begin + i] - refer->at(i)[3]);
         }
         for (int i = 0; i < step_N - 1; ++i) {
-            G[58 + 3 * i + 1] = -dt * cos(x[phi_begin + i]);
-            G[58 + 3 * i + 2] = -dt * sin(x[phi_begin + i]);
+            G[5 * step_N - 2 + 3 * i + 1] = -dt * cos(x[phi_begin + i]);
+            G[5 * step_N - 2 + 3 * i + 2] = -dt * sin(x[phi_begin + i]);
         } // G[91], G.size() = 92
 
         for (int i = 0; i < step_N - 1; ++i) {
-            G[92 + 3 * i] = 2 * weight_a * x[a_begin + i];
-            G[92 + 3 * i + 1] = -dt * dt / 2 * cos(x[phi_begin + i]);
-            G[92 + 3 * i + 2] = -dt * dt / 2 * sin(x[phi_begin + i]);
+            G[8 * step_N - 4 + 3 * i] = 2 * weight_a * x[a_begin + i];
+            G[8 * step_N - 4 + 3 * i + 1] = -dt * dt / 2 * cos(x[phi_begin + i]);
+            G[8 * step_N - 4 + 3 * i + 2] = -dt * dt / 2 * sin(x[phi_begin + i]);
         } // G[124], G.size() = 125
 
         for (int i = 0; i < step_N - 1; ++i) {
-            G[125 + i] = 2 * weight_wd * x[wd_begin + i];
+            G[8 * step_N - 4 + 3 * (step_N - 1) + i] = 2 * weight_wd * x[wd_begin + i];
         } // G[135], G.size() = 136
 
         for (int i = 0; i < step_N - 1; ++i) {
-            G[136 + 2 * i] = -1;
-            G[136 + 2 * i + 1] = 1;
+            G[8 * step_N - 4 + 4 * (step_N - 1) + 2 * i] = -1;
+            G[8 * step_N - 4 + 4 * (step_N - 1) + 2 * i + 1] = 1;
         } // G[157], G.size() = 158
 
         for (int i = 0; i < step_N - 1; ++i) {
-            G[158 + 2 * i] = -1;
-            G[158 + 2 * i + 1] = 1;
+            G[8 * step_N - 4 + 6 * (step_N - 1) + 2 * i] = -1;
+            G[8 * step_N - 4 + 6 * (step_N - 1) + 2 * i + 1] = 1;
         } // G[179], G.size() = 180
     }
 }
@@ -172,14 +172,15 @@ int main(int argc, char **argv) {
     double *Fmul = new double[n_constrains]{0};
     int *Fstate = new int[n_constrains]{0};
 
-    int lenA = 200;
-    int *iAfun = new int[lenA]{0};
-    int *jAvar = new int[lenA]{0};
-    double *A = new double[lenA]{0};
+    int neA_prior = 5 + (4 + 3 + 3) * (step_N - 1);
+    int neG_prior = 4 * step_N + 2 * (step_N - 1) + 5 * (step_N - 1) * 2;
 
-    int lenG = 200;
-    int *iGfun = new int[lenG]{0};
-    int *jGvar = new int[lenG]{0};
+    int len = std::max(neA_prior, neG_prior);
+    int *iAfun = new int[len]{0};
+    int *jAvar = new int[len]{0};
+    double *A = new double[len]{0};
+    int *iGfun = new int[len]{0};
+    int *jGvar = new int[len]{0};
 
     int neA, neG; // neA and neG must be defined when providing dervatives
 
@@ -283,22 +284,22 @@ int main(int argc, char **argv) {
                                    x, xlow, xupp,
                                    iAfun, jAvar, A, neA,
                                    iGfun, jGvar, neG);
-                for (int j = 0; j < lenA; ++j) {
+                for (int j = 0; j < len; ++j) {
                     if (*(iAfun + j) > 0) {
                         --*(iAfun + j);
                         --*(jAvar + j);
                     }
-                }
-                for (int j = 0; j < lenG; ++j) {
                     if (*(iGfun + j) > 0) {
                         --*(iGfun + j);
                         --*(jGvar + j);
                     }
                 }
-                if (neA != 115 || neG != 180)
+                if (neA != neA_prior || neG != neG_prior)
                     jacobi = false;
                 else
                     jacobi = true;
+//                std::cout<<neA_prior<<" "<<neG_prior<<std::endl;
+//                std::cout<<neA<<" "<<neG<<std::endl;
             }
 
             ToyProb.setIntParameter("Derivative option", 1);
