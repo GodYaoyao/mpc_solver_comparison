@@ -37,8 +37,8 @@ void generateInitState(double &x_init,
                        double &v_init,
                        double &w_init,
                        bool random = true) {
-    x_init = 0.;
-    y_init = 0.;
+    x_init = (random ? (double(rand()) / RAND_MAX) : 0.);
+    y_init = (random ? (double(rand()) / RAND_MAX) : 0.);
     phi_init = -M_PI / 6 + (random ? (double(rand()) / RAND_MAX - 0.5) / 10 : 0.);
     v_init = 1.;
     w_init = 0.;
