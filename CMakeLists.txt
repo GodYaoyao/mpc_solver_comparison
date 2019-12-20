@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy)
 find_package(IPOPT REQUIRED)
 find_package(SNOPT REQUIRED)
 FIND_PACKAGE(ACADO REQUIRED)
+find_package(Ceres REQUIRED)
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -30,6 +31,9 @@ INCLUDE_DIRECTORIES(. ${ACADO_INCLUDE_DIRS})
 
 add_executable(acado_node src/acado.cpp)
 target_link_libraries(acado_node ${catkin_LIBRARIES} ${ACADO_SHARED_LIBRARIES} ${LINKER_LIBS})
+
+add_executable(ceres_node src/ceres.cpp)
+target_link_libraries(ceres_node ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${LINKER_LIBS})
 
 add_executable(ipopt_node src/ipopt.cpp)
 target_link_libraries(ipopt_node ${catkin_LIBRARIES} ${IPOPT_LIBRARIES} ${LINKER_LIBS})
