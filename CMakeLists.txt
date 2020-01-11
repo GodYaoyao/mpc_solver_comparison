@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 11)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy roslib)
 find_package(IPOPT REQUIRED)
 find_package(SNOPT REQUIRED)
 FIND_PACKAGE(ACADO REQUIRED)
@@ -31,9 +31,6 @@ INCLUDE_DIRECTORIES(. ${ACADO_INCLUDE_DIRS})
 
 add_executable(acado_node src/acado.cpp)
 target_link_libraries(acado_node ${catkin_LIBRARIES} ${ACADO_SHARED_LIBRARIES} ${LINKER_LIBS})
-
-add_executable(ceres_node src/ceres.cpp)
-target_link_libraries(ceres_node ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${LINKER_LIBS})
 
 add_executable(ipopt_node src/ipopt.cpp)
 target_link_libraries(ipopt_node ${catkin_LIBRARIES} ${IPOPT_LIBRARIES} ${LINKER_LIBS})

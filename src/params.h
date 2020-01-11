@@ -6,7 +6,7 @@
 #define SOLVER_COMPARISON_PARAMS_H
 const bool random_state = true;
 const double g = 9.81;
-const int step_N = 12;
+const int step_N = 15;
 const double dt = 0.1;
 const int weight_x = 10;
 const int weight_y = 10;
@@ -45,7 +45,6 @@ void generateInitState(double &x_init,
 }
 
 void generateReferPoint(std::vector<std::vector<double>> *&refer, bool random = true) {
-    refer = new std::vector<std::vector<double>>(step_N, std::vector<double>(4));
     refer->at(0)[0] = 1.;
     refer->at(0)[1] = 0.;
     refer->at(0)[2] = -M_PI / 6;

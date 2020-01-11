@@ -5,12 +5,14 @@
 #include <cmath>
 #include <vector>
 #include <numeric>
+#include <fstream>
 #include "ros/ros.h"
+#include "ros/package.h"
 #include "snopt/snopt.h"
 #include "snopt/snoptProblem.hpp"
 #include "params.h"
 
-std::vector<std::vector<double>> *refer = nullptr;
+std::vector<std::vector<double>> *refer = new std::vector<std::vector<double>>(step_N, std::vector<double>(4));
 
 void learnFunction(const double &x0,
                    const double &y0,
@@ -177,15 +179,25 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "snopt_node");
     ros::NodeHandle nh;
     ros::Rate loop_rate(10);
+    std::string package_dir;
+    package_dir = ros::package::getPath("solver_comparison");
+    std::ifstream file1(package_dir + "/src/snopt_fail.txt");
+    int i = 0;
+    double xr, yr, thetar, vr;
+    while (file1 >> xr >> yr >> thetar >> vr) {
+//        std::cout << xr << "," << yr << "," << thetar << "," << vr << std::endl;
+        refer->at(i++) = std::vector<double>{xr, yr, thetar, vr};
+    }
+    file1.close();
+    double x_init = 0., y_init = 0., phi_init = 0., v_init = 10.1336, w_init = 0.100727;
 
     while (ros::ok()) {
         clock_t t_start = clock();
 //        for (int i = 0; i < n_vars; ++i) {
 //            x[i] = 0.; // memset(x+i, 0, 8);
 //        }
-        double x_init, y_init, phi_init, v_init, w_init;
-        generateInitState(x_init, y_init, phi_init, v_init, w_init, random_state);
-        generateReferPoint(refer, random_state);
+//        generateInitState(x_init, y_init, phi_init, v_init, w_init, random_state);
+//        generateReferPoint(refer, random_state);
 
         // Allocate and initialize;
         int nS = 0, nInf;
