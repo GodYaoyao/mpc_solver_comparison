@@ -25,6 +25,57 @@ void learnFunction(const double &x0,
     // TODO:
 }
 
+void fFunction(int *Status, int *n, double x[],
+                int *needF, int *neF, double F[],
+                int *needG, int *neG, double G[],
+                char *cu, int *lencu,
+                int iu[], int *leniu,
+                double ru[], int *lenru) {
+    if (*needF > 0) {
+        F[0] = 0.;
+        for (int i = 0; i < step_N; ++i) {
+            F[0] += weight_x * pow(x[x_begin + i] - refer->at(i)[0], 2);
+            F[0] += weight_y * pow(x[y_begin + i] - refer->at(i)[1], 2);
+            F[0] += weight_phi * pow(x[phi_begin + i] - refer->at(i)[2], 2);
+            F[0] += weight_v * pow(x[v_begin + i] - refer->at(i)[3], 2);
+        }
+        for (int i = 0; i < step_N - 1; ++i) {
+            F[0] += weight_a * pow(x[a_begin + i], 2);
+            F[0] += weight_wd * pow(x[wd_begin + i], 2);
+        }
+
+        F[1 + x_begin] = x[x_begin];
+        F[1 + y_begin] = x[y_begin];
+        F[1 + phi_begin] = x[phi_begin];
+        F[1 + v_begin] = x[v_begin];
+        F[1 + w_begin] = x[w_begin];
+
+        for (int i = 0; i < step_N - 1; ++i) {
+
+            double x1 = x[x_begin + i + 1];
+            double y1 = x[y_begin + i + 1];
+            double phi1 = x[phi_begin + i + 1];
+            double v1 = x[v_begin + i + 1];
+            double w1 = x[w_begin + i + 1];
+
+            double x0 = x[x_begin + i];
+            double y0 = x[y_begin + i];
+            double phi0 = x[phi_begin + i];
+            double v0 = x[v_begin + i];
+            double w0 = x[w_begin + i];
+
+            double a0 = x[a_begin + i];
+            double wd0 = x[wd_begin + i];
+
+            F[2 + x_begin + i] = x1 - (x0 + (v0 * dt + a0 * dt * dt / 2) * cos(phi0));
+            F[2 + y_begin + i] = y1 - (y0 + (v0 * dt + a0 * dt * dt / 2) * sin(phi0));
+            F[2 + phi_begin + i] = phi1 - (phi0 + (w0 * dt + wd0 * dt * dt / 2));
+            F[2 + v_begin + i] = v1 - (v0 + a0 * dt);
+            F[2 + w_begin + i] = w1 - (w0 + wd0 * dt);
+        }
+    }
+}
+
 void fgFunction(int *Status, int *n, double x[],
                 int *needF, int *neF, double F[],
                 int *needG, int *neG, double G[],
@@ -141,7 +192,7 @@ int main(int argc, char **argv) {
     }
     for (int i = v_begin; i < w_begin; ++i) {
         xlow[i] = 0;
-        xupp[i] = 10;
+        xupp[i] = 20;
         xstate[i] = 0;
     }
     for (int i = w_begin; i < a_begin; ++i) {
@@ -248,7 +299,7 @@ int main(int argc, char **argv) {
             // Solve the problem.
             // snJac is called implicitly in this case to compute the Jacobian.
             solution = ToyProb.solve(Cold, n_constrains, n_vars,
-                                     ObjAdd, ObjRow, fgFunction,
+                                     ObjAdd, ObjRow, fFunction,
                                      xlow, xupp, Flow, Fupp,
                                      x, xstate, xmul,
                                      F, Fstate, Fmul,
